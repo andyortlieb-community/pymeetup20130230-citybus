@@ -9,6 +9,13 @@ class Constants:
     Version = '0.0.2'
     SupportedVersions = [ '0.0.1','0.0.2' ]
 
+    @classmethod
+    def toDict(cls):
+        return {
+            'Version':cls.Version,
+            'SupportedVersions':cls.SupportedVersions
+        }
+
 ###
 ###     The Database...
 ###
@@ -51,19 +58,28 @@ class REST:
         return json.dumps({"Success":None}),204
 
 class Success(REST):
+
+    def __init__(self, data=None):
+        if data: self.data = data
+
     def render(self):
         output = {"Success":True}
-        if hasattr(self, 'data'):
+        if hasattr(self, 'data') and self.data:
 
             # Is it a single model?
             if isinstance(self.data, Model):
                 output['Data'] =  self.data.toDict()
+    
+            # Does our data have a toDict() for us?
+            if hasattr(self.data,'toDict'):
+                output['Data'] = self.data.toDict()
 
-            elif isinstance(self.data, List):
-                output['Data'] = [ model.toDict for model in self.data ] 
+            elif isinstance(self.data, list):
+                output['Data'] = [ model.toDict() for model in self.data ] 
 
             else:
                 output['Data'] = None
+
         return json.dumps(output),200
 
 class NotFound(REST):
@@ -91,23 +107,19 @@ def home():
         'buscount': 32
     })
 
+
 @app.route('/version/')
 def version():
-    return json.dumps({ 
-        'Success':True,
-        'Data': {
-            'Version':Constants.Version,
-            'SupportedVersions':Constants.SupportedVersions
-        }
-    })
+    return Success(Constants).render()
+
 
 @app.route('/v1/busroutes', methods=['GET'])
 def busroutes():
-    routes = [ route.toDict() for route in BusRoute.query.all() ]
-    return json.dumps({
-        'Success':True,
-        'Data': routes
-    })
+    routes = BusRoute.query.all()
+    if (routes):
+        return Success(routes).render()
+    return NotFound().render()
+
 
 @app.route('/v1/busroutes', methods=['POST'])
 def busroutesPOST():
@@ -119,10 +131,8 @@ def busroutesPOST():
     finally:
         session.rollback()
 
-    return json.dumps({
-        'Success':True,
-        'Data': route.toDict()
-    })
+    return Success(route).render()
+
 
 @app.route('/v1/busroutes', methods=['PUT'])
 def busroutesPUT():
@@ -135,14 +145,8 @@ def busroutesPUT():
     else:
         route = False
 
-    from pprint import pprint
-    pprint(route)
-
     if not route: 
-        return json.dumps({
-            "Success": False,
-            "Msg":"The requested object does not exist"
-        }), 404
+        return NotFound().render()
     
     route = route[0]
 
@@ -150,11 +154,7 @@ def busroutesPUT():
     session.add(route)
     session.flush()
 
-    return json.dumps({
-        "Success":True,
-        "Data":route.toDict()
-    })
-
+    return Success(route).render()
     
 
 def SetupDB():
