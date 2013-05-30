@@ -70,6 +70,10 @@ def busroutes():
 		'Data': routes
 	})
 
+@app.route('/v1/busroutes', methods=['POST'])
+def busroutesPOST():
+	
+
 def SetupDB():
 	# Delete the db file
 	import os
