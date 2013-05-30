@@ -76,9 +76,6 @@ def busroutes():
 
 @app.route('/v1/busroutes', methods=['POST'])
 def busroutesPOST():
-    from pprint import pprint
-    pprint ( request.json )
-    
     route = BusRoute()
     route.fromDict(request.json)
     session.add(route)
@@ -91,6 +88,38 @@ def busroutesPOST():
         'Success':True,
         'Data': route.toDict()
     })
+
+@app.route('/v1/busroutes', methods=['PUT'])
+def busroutesPUT():
+    routeId = request.json.get('id')
+
+    if routeId: 
+        routeId = '%s'%routeId
+        route = BusRoute.query.filter(BusRoute.id==routeId).all()
+
+    else:
+        route = False
+
+    from pprint import pprint
+    pprint(route)
+
+    if not route: 
+        return json.dumps({
+            "Success": False,
+            "Msg":"The requested object does not exist"
+        }), 404
+    
+    route = route[0]
+
+    route.fromDict(request.json)
+    session.add(route)
+    session.flush()
+
+    return json.dumps({
+        "Success":True,
+        "Data":route.toDict()
+    })
+
     
 
 def SetupDB():
