@@ -29,5 +29,20 @@ def version():
 		}
 	})
 
+@app.route('/v1/busroutes', methods=['GET'])
+def busroutes():
+	return json.dumps({
+		'Success':True,
+		'Data':[
+			{ 
+				'route':'201',
+				'busses':17
+			},{
+				'route':'211',
+				'busses':30
+			}
+		]
+	})
+
 if __name__=='__main__':
 	app.run()
