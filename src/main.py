@@ -41,6 +41,41 @@ class BusRoute(Model):
     busses = Column(Integer)
 
 
+###
+###     Our REST API
+###
+
+# Just a base class, not terribly useful.
+class REST:
+    def render(self):
+        return json.dumps({"Success":None}),204
+
+class Success(REST):
+    def render(self):
+        output = {"Success":True}
+        if hasattr(self, 'data'):
+
+            # Is it a single model?
+            if isinstance(self.data, Model):
+                output['Data'] =  self.data.toDict()
+
+            elif isinstance(self.data, List):
+                output['Data'] = [ model.toDict for model in self.data ] 
+
+            else:
+                output['Data'] = None
+        return json.dumps(output),200
+
+class NotFound(REST):
+    def __init__(self,msg="The item was not found"):
+        self.msg = msg
+
+    def render(self):
+        return json.dumps({
+            'Success': False,
+            'Msg':self.msg
+        }),404
+
 
 ####
 ####    The flask app ....
