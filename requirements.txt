@@ -1,4 +1,4 @@
-Sqlalchemy==0.8.1
+Sqlalchemy==0.8
 Flask==0.9
 ipython
 ipdb
